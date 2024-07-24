@@ -1,0 +1,91 @@
+name: ctf-platform
+
+services:
+  nginx:
+    image: nginx
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/conf.d/nginx.conf
+      - ./data/nginx/log/:/var/log/nginx/
+      - ./data/static:/usr/share/nginx/html/static
+    depends_on:
+      - backend
+    networks:
+      - internal
+
+  backend:
+    build:
+      context: ..
+      dockerfile: ./deploy/Dockerfile
+    env_file:
+      - ./config/.env
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MINIO_HOST=http://ctf.minio:9000/
+    depends_on:
+      mysql:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./data/static/:/backend/static/
+      - ./entrypoint.sh:/backend/entrypoint.sh
+    networks:
+      - ctf-platform-net
+      - internal
+
+  mysql:
+    image: mysql
+    ports:
+      - "127.0.0.1:3307:3306"
+    env_file:
+      - ./config/.env
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "$MYSQL_USER", "-p$MYSQL_PASSWORD" ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    networks:
+      - internal
+
+  minio:
+    image: minio/minio
+    hostname: ctf.minio
+    command: server /data --console-address ":9001"
+    env_file:
+      - ./config/.env
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    healthcheck:
+      test: [ "CMD", "mc", "ready", "local" ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - ./data/minio:/data
+    networks:
+      - ctf-platform-net
+      - internal
+
+  create-buckets:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./create-bucket.sh:/etc/create-bucket.sh
+    env_file:
+      - ./config/.env
+    entrypoint: /etc/create-bucket.sh
+    networks:
+      - internal
+
+networks:
+  internal:
+  ctf-platform-net:
+    external: true

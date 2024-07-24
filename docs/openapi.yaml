@@ -1,0 +1,627 @@
+openapi: 3.0.0
+
+info:
+  title: CTF Platform API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000
+    description: Local
+
+paths:
+  /api/auth/token/:
+    post:
+      summary: Obtain a token
+      tags:
+        - Token Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Token obtained
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenPair"
+
+  /api/auth/token/refresh/:
+    post:
+      summary: Refresh a token
+      tags:
+        - Token Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh:
+                  type: string
+      responses:
+        "200":
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenPair"
+
+  /api/auth/token/verify/:
+    post:
+      summary: Verify a token
+      tags:
+        - Token Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+      responses:
+        "200":
+          description: Token verified
+
+  /api/auth/telegram/staff/:
+    post:
+      summary: Link Telegram account
+      tags:
+        - Telegram Auth
+      security:
+        - Bearer: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Telegram"
+      responses:
+        "201":
+          description: Telegram account linked successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Telegram"
+
+  /api/auth/telegram/{tg_id}/:
+    get:
+      summary: Retrieve a user by TG ID
+      tags:
+        - Telegram Auth
+      parameters:
+        - name: tg_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: TG ID of the user to retrieve
+      responses:
+        "200":
+          description: A user object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /api/users/:
+    get:
+      summary: List all users
+      tags:
+        - User
+      responses:
+        "200":
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /api/users/{id}/:
+    get:
+      summary: Retrieve a user by ID
+      tags:
+        - User
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the user to retrieve
+      responses:
+        "200":
+          description: A user object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /api/teams/:
+    get:
+      summary: List all teams
+      tags:
+        - Team
+      responses:
+        "200":
+          description: A list of teams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Team"
+
+  /api/teams/join/:
+    post:
+      summary: Join a team
+      tags:
+        - Team
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  type: integer
+                invite:
+                  type: string
+      responses:
+        "200":
+          description: Team joined
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/teams/{id}/:
+    get:
+      summary: Retrieve a team by ID
+      tags:
+        - Team
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the team to retrieve
+      responses:
+        "200":
+          description: A team object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Team"
+
+  /api/statistics/{id}/:
+    get:
+      summary: Retrieve a user statistics by ID
+      tags:
+        - Statistics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the user to retrieve
+      responses:
+        "200":
+          description: A statistics object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Statistics"
+
+  /api/challenges/:
+    get:
+      summary: List all challenges
+      tags:
+        - Challenge
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A list of challenges
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Challenge"
+
+  /api/challenges/{id}/:
+    get:
+      summary: Retrieve a challenge by ID
+      tags:
+        - Challenge
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the challenge to retrieve
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A challenge object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Challenge"
+
+  /api/challenges/submit/staff/:
+    post:
+      summary: Submit a flag for the hidden challenge
+      tags:
+        - Challenge
+      security:
+        - Bearer: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                flag:
+                  type: string
+                user:
+                  type: integer
+      responses:
+        "200":
+          description: Flag submission result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  correct:
+                    type: boolean
+
+  /api/challenges/{id}/submit/staff/:
+    post:
+      summary: Submit a flag for the challenge
+      tags:
+        - Challenge
+      security:
+        - Bearer: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the challenge to submit for
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                flag:
+                  type: string
+                user:
+                  type: integer
+      responses:
+        "200":
+          description: Flag submission result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  correct:
+                    type: boolean
+
+  /api/scoreboard/users/:
+    get:
+      summary: User scoreboard
+      tags:
+        - Scoreboard
+      responses:
+        "200":
+          description: A list of users with scores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserScore"
+
+  /api/scoreboard/teams/:
+    get:
+      summary: Team scoreboard
+      tags:
+        - Scoreboard
+      responses:
+        "200":
+          description: A list of teams with scores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeamScore"
+
+  /api/events/:
+    get:
+      summary: List all events
+      tags:
+        - Event
+      responses:
+        "200":
+          description: A list of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+
+  /api/events/{id}/:
+    get:
+      summary: Retrieve an event by ID
+      tags:
+        - Event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the event to retrieve
+      responses:
+        "200":
+          description: An event object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+
+  /api/notifications/:
+    get:
+      summary: List all notifications
+      tags:
+        - Notification
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A list of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /api/notifications/{id}/:
+    get:
+      summary: Retrieve a notification by ID
+      tags:
+        - Notification
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the notification to retrieve
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A notification object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+components:
+  schemas:
+    TokenPair:
+      type: object
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+
+    Telegram:
+      type: object
+      properties:
+        user:
+          type: string
+          format: uuid
+        tg_id:
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        username:
+          type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+
+    Team:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+
+    Statistics:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        team:
+          $ref: "#/components/schemas/Team"
+        personal_score:
+          type: number
+          format: float
+        team_score:
+          type: number
+          format: float
+        score:
+          type: number
+          format: float
+        place:
+          type: integer
+        team_place:
+          type: integer
+
+    S3File:
+      type: object
+      properties:
+        id:
+          type: integer
+        s3_key:
+          type: string
+
+    Challenge:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        score:
+          type: integer
+        team:
+          type: string
+        dynamic:
+          type: boolean
+        hidden:
+          type: boolean
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        solved:
+          type: boolean
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/S3File"
+
+    UserScore:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - type: object
+          properties:
+            score:
+              type: number
+              format: float
+
+    TeamScore:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Team"
+        - type: object
+          properties:
+            score:
+              type: number
+              format: float
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        speaker:
+          type: string
+        affiliation:
+          type: string
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/S3File"
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: integer
+          description: >
+            Visibility level:
+              - 0 - personal
+              - 1 - team
+              - 2 - all
+        created_at:
+          type: string
+          format: date-time
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/S3File"
+
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
