@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models, transaction
+from django.db import models
 from django.db.models import Exists, OuterRef
 
 
@@ -25,7 +25,7 @@ class Challenge(models.Model):
     active = models.BooleanField(default=True)
     team = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
-    dynamic = models.BooleanField(default=False)
+    review = models.BooleanField(default=False)
     regexp = models.BooleanField(default=False)
 
     start = models.DateTimeField(null=True, blank=True)
@@ -41,29 +41,32 @@ class Challenge(models.Model):
         return self.name
 
     def submit(self, flag: str, user_id: int, team_id: int | None = None) -> bool:
+        if self.review:
+            return False
+
         if self.regexp:
             correct = re.match(self.flag, flag) is not None
         else:
             correct = self.flag.lower() == flag.lower()
 
-        with transaction.atomic():
-            params = {
-                "challenge_id": self.id,
-                "correct": correct,
-                "flag": flag,
-                "user_id": user_id,
-            }
+        if self.team:
+            if not team_id:
+                return False
 
-            if self.team:
-                if not team_id:
-                    return False
+            if Submission.objects.filter(challenge=self, team_id=team_id, correct=True).exists():
+                return correct
 
-                if Submission.objects.filter(challenge=self, team_id=team_id, correct=True).exists():
-                    return correct
+        params = {
+            "challenge_id": self.id,
+            "correct": correct,
+            "flag": flag,
+            "user_id": user_id,
+        }
 
-                params["team_id"] = team_id
+        if self.team:
+            params["team_id"] = team_id
 
-            Submission.objects.get_or_create(**params)
+        Submission.objects.get_or_create(**params)
 
         return correct
 

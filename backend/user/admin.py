@@ -33,6 +33,37 @@ class UserAdmin(admin.ModelAdmin):
 
     ordering = ("username",)
 
+    fieldsets = [
+        (
+            "Name",
+            {
+                "fields": [
+                    ("last_name", "first_name"),
+                    "username",
+                ],
+            },
+        ),
+        (
+            "System",
+            {
+                "fields": [
+                    "invite",
+                    "team",
+                ],
+            },
+        ),
+        (
+            "Authentication",
+            {
+                "fields": [
+                    "password",
+                    "is_staff",
+                    "student",
+                ],
+            },
+        ),
+    ]
+
     def team_info(self, obj: User) -> str:
         return get_change_link(obj.team)
 

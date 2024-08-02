@@ -1,4 +1,5 @@
 import uuid
+from secrets import token_hex
 
 from coolname import generate_slug
 from django.contrib.auth.models import AbstractUser, UserManager
@@ -11,6 +12,10 @@ from backend.challenge.models import Submission
 
 def get_coolname() -> str:
     return generate_slug(3)
+
+
+def get_password() -> str:
+    return token_hex(16)
 
 
 class CustomUserManager(UserManager):
@@ -50,12 +55,16 @@ class CustomUserManager(UserManager):
 
 
 class User(AbstractUser):
-    username = models.CharField(max_length=150, unique=True)
-    student = models.BooleanField(default=True)
-    invite = models.CharField(max_length=36, default=uuid.uuid4)
-    team = models.ForeignKey("Team", on_delete=models.SET_NULL, null=True, blank=True, related_name="users")
+    username = models.CharField(max_length=150, unique=True, help_text="Username, by default 'Last name First name'")
+    password = models.CharField(max_length=128, default=get_password, help_text="User password")
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    student = models.BooleanField(default=True, help_text="Whether or not the user is a student")
+    invite = models.CharField(max_length=36, default=uuid.uuid4, help_text="User invite code")
+    team = models.ForeignKey(
+        "Team", on_delete=models.SET_NULL, null=True, blank=True, related_name="users", help_text="User's team"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True, help_text="User creation date")
 
     objects = CustomUserManager()
 
@@ -80,10 +89,10 @@ class TeamManager(models.Manager):
 
 
 class Team(models.Model):
-    name = models.CharField(max_length=250, default=get_coolname)
-    invite = models.CharField(max_length=36, default=uuid.uuid4)
+    name = models.CharField(max_length=250, default=get_coolname, help_text="Team name")
+    invite = models.CharField(max_length=36, default=uuid.uuid4, help_text="Team invite code")
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, help_text="Team creation date")
 
     objects = TeamManager()
 

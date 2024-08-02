@@ -19,7 +19,7 @@ from backend.user.models import Team, User
 
 class ChallengeViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ChallengeSerializer
-    queryset = Challenge.objects.annotate_solved().filter(active=True, dynamic=False)
+    queryset = Challenge.objects.annotate_solved().filter(active=True)
 
     def apply_filter(self, queryset: QuerySet[Challenge]) -> QuerySet[Challenge]:
         now = timezone.localtime(timezone.now())
@@ -41,7 +41,7 @@ class ChallengeViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class SubmitChallengeStaffView(APIView):
-    queryset = Challenge.objects.filter(active=True, dynamic=False, hidden=False)
+    queryset = Challenge.objects.filter(active=True, hidden=False)
     serializer_class = SubmitStaffSerializer
     authentication_classes = (authentication.JWTAuthentication,)
     permission_classes = (permissions.IsAdminUser,)
@@ -66,7 +66,7 @@ class SubmitChallengeStaffView(APIView):
 
 
 class SubmitHiddenChallengeStaffView(APIView):
-    queryset = Challenge.objects.filter(active=True, dynamic=False, hidden=True)
+    queryset = Challenge.objects.filter(active=True, hidden=True)
     serializer_class = SubmitStaffSerializer
     authentication_classes = (authentication.JWTAuthentication,)
     permission_classes = (permissions.IsAdminUser,)

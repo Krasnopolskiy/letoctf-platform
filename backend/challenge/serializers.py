@@ -18,7 +18,7 @@ class ChallengeSerializer(serializers.ModelSerializer):
             "description",
             "score",
             "team",
-            "dynamic",
+            "review",
             "hidden",
             "start",
             "end",
