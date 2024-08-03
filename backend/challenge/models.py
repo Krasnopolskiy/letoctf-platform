@@ -22,14 +22,18 @@ class Challenge(models.Model):
     score = models.IntegerField()
     flag = models.CharField(max_length=250, null=True, blank=True)
 
-    active = models.BooleanField(default=True)
-    team = models.BooleanField(default=False)
-    hidden = models.BooleanField(default=False)
-    review = models.BooleanField(default=False)
-    regexp = models.BooleanField(default=False)
+    active = models.BooleanField(default=True, help_text="When set to false, the challenge is hidden")
+    team = models.BooleanField(default=False, help_text="Whether or not the challenge is a team challenge")
+    hidden = models.BooleanField(
+        default=False, help_text="When set to true, the challenge is not visible, but it can still be submitted"
+    )
+    review = models.BooleanField(
+        default=False, help_text="Whether or not the challenge requires review from the admins team"
+    )
+    regexp = models.BooleanField(default=False, help_text="Whether or not the flag is a regular expression")
 
-    start = models.DateTimeField(null=True, blank=True)
-    end = models.DateTimeField(null=True, blank=True)
+    start = models.DateTimeField(null=True, blank=True, help_text="If set, challenge is hidden before this time")
+    end = models.DateTimeField(null=True, blank=True, help_text="If set, challenge is hidden after this time")
 
     created_at = models.DateTimeField(auto_now_add=True)
 

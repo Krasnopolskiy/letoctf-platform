@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
-from backend.event.models import Event
+from backend.event.models import Event, Feedback
 from backend.storage.serializers import S3FileSerializer
+from backend.user.models import User
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -18,4 +19,18 @@ class EventSerializer(serializers.ModelSerializer):
             "start",
             "end",
             "files",
+        )
+
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    event = serializers.PrimaryKeyRelatedField(queryset=Event.objects.all())
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+
+    class Meta:
+        model = Feedback
+        fields = (
+            "score",
+            "text",
+            "event",
+            "user",
         )

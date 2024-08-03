@@ -56,15 +56,13 @@ class CustomUserManager(UserManager):
 
 class User(AbstractUser):
     username = models.CharField(max_length=150, unique=True, help_text="Username, by default 'Last name First name'")
-    password = models.CharField(max_length=128, default=get_password, help_text="User password")
+    password = models.CharField(max_length=128, default=get_password)
 
     student = models.BooleanField(default=True, help_text="Whether or not the user is a student")
-    invite = models.CharField(max_length=36, default=uuid.uuid4, help_text="User invite code")
-    team = models.ForeignKey(
-        "Team", on_delete=models.SET_NULL, null=True, blank=True, related_name="users", help_text="User's team"
-    )
+    invite = models.CharField(max_length=36, default=uuid.uuid4, help_text="Invite code to link account")
+    team = models.ForeignKey("Team", on_delete=models.SET_NULL, null=True, blank=True, related_name="users")
 
-    created_at = models.DateTimeField(auto_now_add=True, help_text="User creation date")
+    created_at = models.DateTimeField(auto_now_add=True)
 
     objects = CustomUserManager()
 
@@ -89,10 +87,10 @@ class TeamManager(models.Manager):
 
 
 class Team(models.Model):
-    name = models.CharField(max_length=250, default=get_coolname, help_text="Team name")
-    invite = models.CharField(max_length=36, default=uuid.uuid4, help_text="Team invite code")
+    name = models.CharField(max_length=250, default=get_coolname)
+    invite = models.CharField(max_length=36, default=uuid.uuid4, help_text="Invite code to join team")
 
-    created_at = models.DateTimeField(auto_now_add=True, help_text="Team creation date")
+    created_at = models.DateTimeField(auto_now_add=True)
 
     objects = TeamManager()
 
